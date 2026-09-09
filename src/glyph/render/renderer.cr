@@ -1,0 +1,60 @@
+# src/glyph/render/renderer.cr
+module Glyph
+  struct Image
+    getter width  : Int32
+    getter height : Int32
+    getter pixels : Bytes
+
+    def initialize(@width : Int32, @height : Int32, @pixels : Bytes)
+    end
+  end
+
+  class Renderer
+    getter cell_width  : Int32
+    getter cell_height : Int32
+    getter baseline    : Int32
+
+    def initialize(cell_width : Int32, cell_height : Int32, baseline : Int32? = nil)
+      raise ArgumentError.new("cell metrics must be positive") if cell_width <= 0 || cell_height <= 0
+      @cell_width  = cell_width
+      @cell_height = cell_height
+      @baseline    = baseline || (cell_height * 4) // 5
+      @cache       = {} of Tuple(Int32, UInt64, UInt32) => Image
+    end
+
+    def resize(cell_width : Int32, cell_height : Int32, baseline : Int32? = nil) : Nil
+      raise ArgumentError.new("cell metrics must be positive") if cell_width <= 0 || cell_height <= 0
+      @cell_width  = cell_width
+      @cell_height = cell_height
+      @baseline    = baseline || (cell_height * 4) // 5
+      @cache.clear
+    end
+
+    def render(reg : Registration, fg_rgb : UInt32) : Image
+      key    = {reg.cp, reg.tag, fg_rgb}
+      cached = @cache[key]?
+      return cached if cached
+
+      width  = reg.span * @cell_width
+      height = @cell_height
+      bitmap = Bitmap.new(width, height)
+      tf     = Layout.resolve(reg, @cell_width, @cell_height, @baseline)
+
+      case reg.format
+      when .glyf?
+        outline = reg.outlines.first?
+        if outline
+          mask = Fill.coverage(Path.flatten(outline, tf), width, height)
+          bitmap.blend(mask, SolidPaint.new(0xff000000_u32 | (fg_rgb & 0x00ffffff_u32)))
+        end
+      else
+        ColrRenderer.new(reg.outlines, reg.colr, reg.palette, fg_rgb, width, height)
+          .render(bitmap, tf)
+      end
+
+      image = Image.new(width, height, bitmap.to_rgba8)
+      @cache[key] = image
+      image
+    end
+  end
+end
