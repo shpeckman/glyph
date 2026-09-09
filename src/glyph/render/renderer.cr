@@ -15,12 +15,15 @@ module Glyph
     getter cell_height : Int32
     getter baseline    : Int32
 
+    property subpixel      : Bool = false
+    property gamma_correct : Bool = false
+
     def initialize(cell_width : Int32, cell_height : Int32, baseline : Int32? = nil)
       raise ArgumentError.new("cell metrics must be positive") if cell_width <= 0 || cell_height <= 0
       @cell_width  = cell_width
       @cell_height = cell_height
       @baseline    = baseline || (cell_height * 4) // 5
-      @cache       = {} of Tuple(Int32, UInt64, UInt32) => Image
+      @cache       = {} of Tuple(Int32, UInt64, UInt32, Bool, Bool) => Image
     end
 
     def resize(cell_width : Int32, cell_height : Int32, baseline : Int32? = nil) : Nil
@@ -32,24 +35,26 @@ module Glyph
     end
 
     def render(reg : Registration, fg_rgb : UInt32) : Image
-      key    = {reg.cp, reg.tag, fg_rgb}
+      key    = {reg.cp, reg.tag, fg_rgb, @subpixel, @gamma_correct}
       cached = @cache[key]?
       return cached if cached
 
       width  = reg.span * @cell_width
       height = @cell_height
-      bitmap = Bitmap.new(width, height)
+      bitmap = Bitmap.new(width, height, @subpixel, @gamma_correct)
       tf     = Layout.resolve(reg, @cell_width, @cell_height, @baseline)
 
       case reg.format
       when .glyf?, .cff?
         outline = reg.outlines.first?
         if outline
-          mask = Fill.coverage(Path.flatten(outline, tf), width, height)
+          mask_w  = @subpixel ? width * 3 : width
+          tf_mask = @subpixel ? Transform.scale(3.0, 1.0).concat(tf) : tf
+          mask    = Fill.coverage(Path.flatten(outline, tf_mask), mask_w, height)
           bitmap.blend(mask, SolidPaint.new(0xff000000_u32 | (fg_rgb & 0x00ffffff_u32)))
         end
       else
-        ColrRenderer.new(reg.outlines, reg.colr, reg.palette, fg_rgb, width, height)
+        ColrRenderer.new(reg.outlines, reg.colr, reg.palette, fg_rgb, width, height, @subpixel)
           .render(bitmap, tf)
       end
 

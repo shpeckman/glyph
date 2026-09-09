@@ -3,7 +3,7 @@ module Glyph
   class ColrRenderer
     def initialize(@outlines : Array(Outline), @colr : Bytes,
                    @palette : Array(UInt32), @fg : UInt32,
-                   @width : Int32, @height : Int32)
+                   @width : Int32, @height : Int32, @subpixel : Bool = false)
       @base_glyph_list = 0
       @layer_list      = 0
     end
@@ -234,7 +234,9 @@ module Glyph
 
     private def glyph_mask(glyph_id : Int32, tf : Transform) : Slice(Float32)?
       return nil if glyph_id < 0 || glyph_id >= @outlines.size
-      Fill.coverage(Path.flatten(@outlines[glyph_id], tf), @width, @height)
+      mask_w  = @subpixel ? @width * 3 : @width
+      tf_mask = @subpixel ? Transform.scale(3.0, 1.0).concat(tf) : tf
+      Fill.coverage(Path.flatten(@outlines[glyph_id], tf_mask), mask_w, @height)
     end
 
     private def color_for(index : UInt16, alpha : Float64) : UInt32
