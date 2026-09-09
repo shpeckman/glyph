@@ -44,8 +44,7 @@ module Glyph
       bitmap = Bitmap.new(width, height, @subpixel, @gamma_correct)
       tf     = Layout.resolve(reg, @cell_width, @cell_height, @baseline)
 
-      case reg.format
-      when .glyf?, .cff?
+      if reg.format.glyf? || reg.format.cff? || reg.colr.empty?
         outline = reg.outlines.first?
         if outline
           mask_w  = @subpixel ? width * 3 : width

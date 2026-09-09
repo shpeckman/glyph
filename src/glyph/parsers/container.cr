@@ -31,10 +31,9 @@ module Glyph
       end
 
       colr_len = r.u16.to_i32
-      raise Error.new(Reason::MalformedPayload) if colr_len <= 0
-      colr = r.slice(colr_len)
+      colr     = colr_len > 0 ? r.slice(colr_len) : Bytes.empty
 
-      cpal_len = r.u16.to_i32
+      cpal_len = r.remaining >= 2 ? r.u16.to_i32 : 0
       cpal     = cpal_len > 0 ? r.slice(cpal_len) : Bytes.empty
 
       fvar_len = r.remaining >= 2 ? r.u16.to_i32 : 0

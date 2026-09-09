@@ -191,7 +191,7 @@ module GlyphBench
       cp = cp >= 0x1000FF ? 0x100001 : cp + 1
       Bench.consume(glossary.register(cp, ring_bytes).span)
     end
-    
+
     Bench.run("Glossary#register  variable font apply") do
       cp = cp >= 0x1000FF ? 0x100001 : cp + 1
       Bench.consume(glossary.register(cp, var_payload, format: Glyph::Format::Colrv0, axes: {"wght" => 700.0}).span)
@@ -259,7 +259,7 @@ module GlyphBench
     end
 
     Bench.run("render  glyf   cold (subpx + gamma)",
-      setup: -> { 
+      setup: -> {
         renderer = Glyph::Renderer.new(CELL_W, CELL_H)
         renderer.subpixel = true
         renderer.gamma_correct = true
@@ -283,4 +283,3 @@ module GlyphBench
 end
 
 GlyphBench.run
-

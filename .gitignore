@@ -5,3 +5,5 @@
 /.shards/
 /shard.lock/
 *.dwarf
+/examples/fonts/
+examples/color_output.ppm
