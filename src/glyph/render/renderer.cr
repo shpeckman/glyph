@@ -1,4 +1,5 @@
 # src/glyph/render/renderer.cr
+
 module Glyph
   struct Image
     getter width  : Int32
@@ -41,7 +42,7 @@ module Glyph
       tf     = Layout.resolve(reg, @cell_width, @cell_height, @baseline)
 
       case reg.format
-      when .glyf?
+      when .glyf?, .cff?
         outline = reg.outlines.first?
         if outline
           mask = Fill.coverage(Path.flatten(outline, tf), width, height)

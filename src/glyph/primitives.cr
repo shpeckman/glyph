@@ -1,15 +1,18 @@
 # src/glyph/primitives.cr
+
 module Glyph
   enum Format
     Glyf
     Colrv0
     Colrv1
+    Cff
 
     def code : String
       case self
       in .glyf?   then "glyf"
       in .colrv0? then "colrv0"
       in .colrv1? then "colrv1"
+      in .cff?    then "cff"
       end
     end
 
@@ -18,6 +21,7 @@ module Glyph
       when "glyf"   then Glyf
       when "colrv0" then Colrv0
       when "colrv1" then Colrv1
+      when "cff"    then Cff
       end
     end
   end
@@ -94,12 +98,34 @@ module Glyph
     end
   end
 
-  struct Point
-    getter x         : Int32
-    getter y         : Int32
-    getter? on_curve : Bool
+  enum PointType : UInt8
+    OnCurve = 0
+    Quad    = 1
+    Cubic   = 2
 
-    def initialize(@x : Int32, @y : Int32, @on_curve : Bool)
+    def on_curve?
+      self == OnCurve
+    end
+
+    def quad?
+      self == Quad
+    end
+
+    def cubic?
+      self == Cubic
+    end
+  end
+
+  struct Point
+    getter x    : Int32
+    getter y    : Int32
+    getter type : PointType
+
+    def initialize(@x : Int32, @y : Int32, @type : PointType)
+    end
+
+    def on_curve? : Bool
+      @type.on_curve?
     end
   end
 

@@ -57,22 +57,42 @@ describe Glyph::Glyf do
     outline.points[1].x.should eq(15)
   end
 
-  it "rejects composite glyphs" do
+  it "parses a composite glyph" do
     io = IO::Memory.new
     io.write_bytes(-1_i16, BE)
     4.times { io.write_bytes(0_i16, BE) }
-    error = expect_raises(Glyph::Error) { Glyph::Glyf.parse(io.to_slice) }
-    error.reason.should eq(Glyph::Reason::CompositeUnsupported)
+    io.write_bytes(0x0002_u16, BE)
+    io.write_bytes(0_u16, BE)
+    io.write_byte(10_u8)
+    io.write_byte(20_u8)
+
+    outlines = [Glyph::Glyf.parse(square_glyf)]
+    outline  = Glyph::Glyf.parse(io.to_slice, outlines)
+
+    outline.point_count.should eq(4)
+    outline.points[0].x.should eq(10)
+    outline.points[0].y.should eq(20)
+    outline.points[2].x.should eq(1010)
+    outline.points[2].y.should eq(1020)
   end
 
-  it "rejects hinting instructions" do
+  it "ignores hinting instructions" do
     io = IO::Memory.new
     io.write_bytes(1_i16, BE)
     4.times { io.write_bytes(0_i16, BE) }
     io.write_bytes(0_u16, BE)
     io.write_bytes(4_u16, BE)
-    error = expect_raises(Glyph::Error) { Glyph::Glyf.parse(io.to_slice) }
-    error.reason.should eq(Glyph::Reason::HintingUnsupported)
+    io.write_bytes(0xDEADBEEF_u32, BE)
+    io.write_byte(0x01_u8)
+    io.write_bytes(100_i16, BE)
+    io.write_bytes(100_i16, BE)
+
+    outline = Glyph::Glyf.parse(io.to_slice)
+
+    outline.point_count.should eq(1)
+    outline.points[0].x.should eq(100)
+    outline.points[0].y.should eq(100)
+    outline.points[0].on_curve?.should be_true
   end
 
   it "rejects an oversized outline before allocating points" do

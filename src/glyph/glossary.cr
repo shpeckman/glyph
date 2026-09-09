@@ -1,4 +1,5 @@
 # src/glyph/glossary.cr
+
 module Glyph
   class Glossary
     getter size : Int32
@@ -32,6 +33,10 @@ module Glyph
       case format
       when .glyf?
         outline = Glyf.parse(payload)
+        raise Error.new(Reason::OutlineTooLarge) if outline.point_count * POINT_COST > DECODED_BUDGET
+        outlines << outline
+      when .cff?
+        outline = Cff.parse(payload)
         raise Error.new(Reason::OutlineTooLarge) if outline.point_count * POINT_COST > DECODED_BUDGET
         outlines << outline
       else

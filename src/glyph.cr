@@ -1,4 +1,5 @@
 # src/glyph.cr
+
 require "./glyph/primitives"
 require "./glyph/transform"
 require "./glyph/reader"
@@ -34,20 +35,16 @@ module Glyph
 
   enum Reason
     OutOfNamespace
-    CompositeUnsupported
-    HintingUnsupported
     MalformedPayload
     PayloadTooLarge
     OutlineTooLarge
 
     def code : String
       case self
-      in .out_of_namespace?      then "out_of_namespace"
-      in .composite_unsupported? then "composite_unsupported"
-      in .hinting_unsupported?   then "hinting_unsupported"
-      in .malformed_payload?     then "malformed_payload"
-      in .payload_too_large?     then "payload_too_large"
-      in .outline_too_large?     then "outline_too_large"
+      in .out_of_namespace?  then "out_of_namespace"
+      in .malformed_payload? then "malformed_payload"
+      in .payload_too_large? then "payload_too_large"
+      in .outline_too_large? then "outline_too_large"
       end
     end
   end

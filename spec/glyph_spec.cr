@@ -22,14 +22,16 @@ describe Glyph do
     it "renders the spec's snake_case names" do
       Glyph::Reason::OutOfNamespace.code.should eq("out_of_namespace")
       Glyph::Reason::OutlineTooLarge.code.should eq("outline_too_large")
-      Glyph::Reason::HintingUnsupported.code.should eq("hinting_unsupported")
+      Glyph::Reason::MalformedPayload.code.should eq("malformed_payload")
+      Glyph::Reason::PayloadTooLarge.code.should eq("payload_too_large")
     end
   end
 
   describe "format names" do
-    it "round-trips the three v1.8 names" do
+    it "round-trips the four format names" do
       Glyph::Format.from_code?("glyf").should eq(Glyph::Format::Glyf)
       Glyph::Format.from_code?("colrv1").should eq(Glyph::Format::Colrv1)
+      Glyph::Format.from_code?("cff").should eq(Glyph::Format::Cff)
       Glyph::Format.from_code?("sixel").should be_nil
       Glyph::Format::Colrv0.code.should eq("colrv0")
     end

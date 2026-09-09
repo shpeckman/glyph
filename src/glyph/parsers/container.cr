@@ -1,4 +1,5 @@
 # src/glyph/parsers/container.cr
+
 module Glyph
   struct Container
     getter outlines : Array(Outline)
@@ -18,7 +19,7 @@ module Glyph
       i        = 0
       while i < count
         len     = r.u16.to_i32
-        outline = Glyf.parse(r.slice(len))
+        outline = Glyf.parse(r.slice(len), outlines)
         budget += outline.point_count * POINT_COST
         raise Error.new(Reason::OutlineTooLarge) if budget > DECODED_BUDGET
         outlines << outline
