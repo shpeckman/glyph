@@ -86,7 +86,51 @@ module GlyphBench
     io.to_slice
   end
 
-  def self.container(outlines : Array(Bytes), colr : Bytes, palette : Bytes) : Bytes
+  def self.fvar(axes : Array(Tuple(String, Float64, Float64, Float64))) : Bytes
+    io = IO::Memory.new
+    io.write_bytes(0x00010000_u32, BE)
+    io.write_bytes(16_u16, BE)
+    io.write_bytes(2_u16, BE)
+    io.write_bytes(axes.size.to_u16, BE)
+    io.write_bytes(20_u16, BE)
+    io.write_bytes(0_u16, BE)
+    io.write_bytes(0_u16, BE)
+    axes.each do |ax|
+      tag, min, df, max = ax
+      tag.each_byte { |b| io.write_byte(b) }
+      io.write_bytes((min * 65536).to_i32, BE)
+      io.write_bytes((df * 65536).to_i32, BE)
+      io.write_bytes((max * 65536).to_i32, BE)
+      io.write_bytes(0_u16, BE)
+      io.write_bytes(0_u16, BE)
+    end
+    io.to_slice
+  end
+
+  def self.gvar(dx : Int8, dy : Int8) : Bytes
+    io = IO::Memory.new
+    io.write_bytes(0x00010000_u32, BE)
+    io.write_bytes(1_u16, BE)
+    io.write_bytes(0_u16, BE)
+    io.write_bytes(0_u32, BE)
+    io.write_bytes(1_u16, BE)
+    io.write_bytes(0_u16, BE)
+    io.write_bytes(24_u32, BE)
+    io.write_bytes(0_u16, BE)
+    io.write_bytes(14_u16, BE)
+    io.write_bytes(1_u16, BE)
+    io.write_bytes(10_u16, BE)
+    io.write_bytes(18_u16, BE)
+    io.write_bytes(0x8000_u16, BE)
+    io.write_bytes(0x4000_u16, BE)
+    io.write_byte(0x07_u8)
+    8.times { io.write_byte(dx.to_u8) }
+    io.write_byte(0x07_u8)
+    8.times { io.write_byte(dy.to_u8) }
+    io.to_slice
+  end
+
+  def self.container(outlines : Array(Bytes), colr : Bytes, palette : Bytes, fvar : Bytes = Bytes.empty, gvar : Bytes = Bytes.empty) : Bytes
     io = IO::Memory.new
     io.write_bytes(outlines.size.to_u16, BE)
     outlines.each do |o|
@@ -97,6 +141,12 @@ module GlyphBench
     io.write(colr)
     io.write_bytes(palette.size.to_u16, BE)
     io.write(palette)
+    if fvar.size > 0 || gvar.size > 0
+      io.write_bytes(fvar.size.to_u16, BE)
+      io.write(fvar)
+      io.write_bytes(gvar.size.to_u16, BE)
+      io.write(gvar)
+    end
     io.to_slice
   end
 
@@ -115,6 +165,8 @@ module GlyphBench
 
     square_bytes = square
     ring_bytes   = ring
+    fvar_bytes   = fvar([{"wght", 100.0, 400.0, 900.0}])
+    gvar_bytes   = gvar(10_i8, 10_i8)
 
     Bench.run("Glyf.parse   square, 4 points") do
       Bench.consume(Glyph::Glyf.parse(square_bytes).point_count)
@@ -131,11 +183,18 @@ module GlyphBench
       Bench.consume(Glyph::Container.parse(payload).outlines.size)
     end
 
-    glossary = Glyph::Glossary.new
+    var_payload = container([square_bytes], colr_v0(0, 0), Bytes.empty, fvar_bytes, gvar_bytes)
+
+    glossary = Glyph::Glossary.new(mode: Glyph::Mode::Font)
     cp       = 0x100000
     Bench.run("Glossary#register  ring") do
       cp = cp >= 0x1000FF ? 0x100001 : cp + 1
       Bench.consume(glossary.register(cp, ring_bytes).span)
+    end
+    
+    Bench.run("Glossary#register  variable font apply") do
+      cp = cp >= 0x1000FF ? 0x100001 : cp + 1
+      Bench.consume(glossary.register(cp, var_payload, format: Glyph::Format::Colrv0, axes: {"wght" => 700.0}).span)
     end
   end
 
@@ -199,6 +258,15 @@ module GlyphBench
       Bench.consume(renderer.render(colr, 0xffffff_u32).width)
     end
 
+    Bench.run("render  glyf   cold (subpx + gamma)",
+      setup: -> { 
+        renderer = Glyph::Renderer.new(CELL_W, CELL_H)
+        renderer.subpixel = true
+        renderer.gamma_correct = true
+      }) do
+      Bench.consume(renderer.render(reg, 0xffffff_u32).width)
+    end
+
     Bench.retained("512 colours in one Renderer cache") do
       cache           = Glyph::Renderer.new(CELL_W, CELL_H)
       @@held_renderer = cache
@@ -215,3 +283,4 @@ module GlyphBench
 end
 
 GlyphBench.run
+
