@@ -1,9 +1,10 @@
 # Makefile
 .PHONY: all fonts run-examples clean
 
-all:
-	@echo "Run 'make fonts' to download the example fonts."
-	@echo "Then run the examples with 'make run-examples' or 'crystal run examples/<name>.cr'"
+all: spec
+
+spec:
+	crystal spec
 
 fonts:
 	mkdir -p examples/fonts
@@ -12,7 +13,7 @@ fonts:
 	curl -L -o examples/fonts/Nabla-Regular.ttf "https://github.com/googlefonts/nabla/raw/main/fonts/ttf/Nabla-Regular.ttf"
 	curl -L -o examples/fonts/MaterialSymbols.ttf "https://github.com/google/material-design-icons/raw/master/variablefont/MaterialSymbolsOutlined%5BFILL%2CGRAD%2Copsz%2Cwght%5D.ttf"
 
-run-examples: fonts
+examples: fonts
 	@echo "--- Running basic_raster.cr ---"
 	crystal run examples/basic_raster.cr
 	@echo "\n--- Running subpixel_lcd.cr ---"
