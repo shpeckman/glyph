@@ -1,6 +1,7 @@
 # spec/spec_helper.cr
 require "spec"
 require "../src/glyph"
+require "../tools/display_glyph"
 
 BE = IO::ByteFormat::BigEndian
 

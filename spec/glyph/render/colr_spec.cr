@@ -9,6 +9,7 @@ describe "colrv0 rendering" do
     reg = g.register(0x100000, payload, format: Glyph::Format::Colrv0,
       size: Glyph::SizeMode::Stretch)
     image = Glyph::Renderer.new(8, 16, 16).render(reg, 0x00ff00_u32)
+    DisplayGlyph.show(image)
     pixel(image, 1, 8).should eq({0xff_u8, 0x00_u8, 0x00_u8, 0xff_u8})
     pixel(image, 6, 8)[3].should eq(0_u8)
   end
@@ -20,6 +21,7 @@ describe "colrv0 rendering" do
     reg = g.register(0x100000, payload, format: Glyph::Format::Colrv0,
       size: Glyph::SizeMode::Stretch)
     image = Glyph::Renderer.new(8, 16, 16).render(reg, 0x00ff00_u32)
+    DisplayGlyph.show(image)
     pixel(image, 1, 8).should eq({0x00_u8, 0xff_u8, 0x00_u8, 0xff_u8})
   end
 end
