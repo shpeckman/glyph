@@ -9,6 +9,19 @@ describe Glyph::Container do
     parsed.outlines.size.should eq(2)
     parsed.colr.empty?.should be_false
     parsed.cpal.empty?.should be_false
+    parsed.fvar.empty?.should be_true
+    parsed.gvar.empty?.should be_true
+  end
+
+  it "parses a container with variation tables" do
+    fvar    = fvar_table([{"wght", 100.0, 400.0, 900.0}])
+    gvar    = simple_gvar_table(10, 10)
+    payload = container([square_glyf], colr_v0_table(1, 0), cpal_table([{255_u8, 0_u8, 0_u8, 255_u8}]), fvar, gvar)
+
+    parsed = Glyph::Container.parse(payload)
+    parsed.outlines.size.should eq(1)
+    parsed.fvar.empty?.should be_false
+    parsed.gvar.empty?.should be_false
   end
 
   it "permits an absent palette table" do

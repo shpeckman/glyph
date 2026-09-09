@@ -27,6 +27,11 @@ module Glyph
       v
     end
 
+    def i8 : Int32
+      v = u8.to_i32
+      v >= 0x80 ? v - 0x100 : v
+    end
+
     def u16 : UInt16
       need(2)
       v = (@bytes.unsafe_fetch(@pos).to_u16 << 8) | @bytes.unsafe_fetch(@pos + 1).to_u16

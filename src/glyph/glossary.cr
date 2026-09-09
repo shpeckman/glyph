@@ -22,7 +22,7 @@ module Glyph
                  upm : Int32 = DEFAULT_UPM, aw : Int32? = nil, lh : Int32? = nil,
                  span : Int32 = 1, size : SizeMode = SizeMode::Height,
                  halign : HAlign = HAlign::Center, valign : VAlign = VAlign::Center,
-                 pad : Pad = Pad.none) : Registration
+                 pad : Pad = Pad.none, axes : Hash(String, Float64)? = nil) : Registration
       raise Error.new(Reason::OutOfNamespace) if @mode.icon? && !Glyph.pua?(cp)
       raise Error.new(Reason::PayloadTooLarge) if payload.size > MAX_PAYLOAD
       span = 1 if span != 2
@@ -45,6 +45,12 @@ module Glyph
         outlines  = container.outlines
         colr      = container.colr
         palette   = Cpal.parse(container.cpal)
+
+        if axes && !container.fvar.empty? && !container.gvar.empty?
+          axis_defs = Fvar.parse(container.fvar)
+          coords    = Fvar.normalize(axis_defs, axes)
+          outlines  = Gvar.apply(outlines, container.gvar, coords)
+        end
       end
 
       existing = @entries[cp]?

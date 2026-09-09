@@ -27,6 +27,22 @@ describe Glyph::Glossary do
     g['a'.ord]?.should_not be_nil
   end
 
+  it "applies variable axes during registration" do
+    fvar = fvar_table([{"wght", 100.0, 400.0, 900.0}])
+    gvar = simple_gvar_table(50_i8, 50_i8)
+
+    payload = container([square_glyf(1000, 1000)], colr_v0_table(0, 0), Bytes.empty, fvar, gvar)
+
+    g   = Glyph::Glossary.new
+    reg = g.register(0x100000, payload, format: Glyph::Format::Colrv0, axes: {"wght" => 900.0})
+
+    outline = reg.outlines.first
+    outline.points[0].x.should eq(50)
+    outline.points[0].y.should eq(50)
+    outline.points[2].x.should eq(1050)
+    outline.points[2].y.should eq(1050)
+  end
+
   it "overwrites without consuming a second slot" do
     g      = Glyph::Glossary.new
     first  = g.register(0x100000, square_glyf)

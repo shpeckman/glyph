@@ -4,7 +4,7 @@ Format & Standard Compatibility:
 [x] Composite Glyphs: The library currently crashes (`CompositeUnsupported`) if `n_contours < 0`. Implementing composite glyph resolution would vastly increase TrueType compatibility, as most fonts use composites for accented characters and structural reuse.
 [x] Ignore Hinting: Instead of throwing `HintingUnsupported`, you can safely parse the hinting byte length and advance the `Reader` past them to render the unhinted outlines.
 [x] Cubic Bézier (CFF/OTF) Support: The `Path` module only handles quadratic Béziers. Adding parsing for OpenType CFF (Type 2 charstrings) and cubic flattening would allow the library to support `.otf` files alongside `.ttf`.
-[ ] Variable Fonts (`gvar` table): Support for OpenType Font Variations. Interpolating coordinates based on user-defined axes (weight, width, optical size) is the modern standard for flexible typography.
+[x] Variable Fonts (`gvar` table): Support for OpenType Font Variations. Interpolating coordinates based on user-defined axes (weight, width, optical size) is the modern standard for flexible typography.
 
 Rendering & Geometry:
 [ ] Signed Distance Fields (SDF/MSDF): Instead of only generating rasterized bitmaps via `Fill.coverage`, add an option to generate Multi-channel Signed Distance Fields. This would allow hardware-accelerated, infinitely scalable rendering of the glyphs on the GPU in external graphics engines.

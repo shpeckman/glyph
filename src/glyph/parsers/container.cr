@@ -5,8 +5,10 @@ module Glyph
     getter outlines : Array(Outline)
     getter colr     : Bytes
     getter cpal     : Bytes
+    getter fvar     : Bytes
+    getter gvar     : Bytes
 
-    def initialize(@outlines : Array(Outline), @colr : Bytes, @cpal : Bytes)
+    def initialize(@outlines : Array(Outline), @colr : Bytes, @cpal : Bytes, @fvar : Bytes = Bytes.empty, @gvar : Bytes = Bytes.empty)
     end
 
     def self.parse(bytes : Bytes) : Container
@@ -14,9 +16,11 @@ module Glyph
       r     = Reader.new(bytes)
       count = r.u16.to_i32
       raise Error.new(Reason::MalformedPayload) if count < 1 || count > MAX_CONTAINER
+
       outlines = Array(Outline).new(count)
       budget   = 0
       i        = 0
+
       while i < count
         len     = r.u16.to_i32
         outline = Glyf.parse(r.slice(len), outlines)
@@ -25,12 +29,21 @@ module Glyph
         outlines << outline
         i += 1
       end
+
       colr_len = r.u16.to_i32
       raise Error.new(Reason::MalformedPayload) if colr_len <= 0
-      colr     = r.slice(colr_len)
+      colr = r.slice(colr_len)
+
       cpal_len = r.u16.to_i32
       cpal     = cpal_len > 0 ? r.slice(cpal_len) : Bytes.empty
-      Container.new(outlines, colr, cpal)
+
+      fvar_len = r.remaining >= 2 ? r.u16.to_i32 : 0
+      fvar     = fvar_len > 0 ? r.slice(fvar_len) : Bytes.empty
+
+      gvar_len = r.remaining >= 2 ? r.u16.to_i32 : 0
+      gvar     = gvar_len > 0 ? r.slice(gvar_len) : Bytes.empty
+
+      Container.new(outlines, colr, cpal, fvar, gvar)
     end
   end
 end
