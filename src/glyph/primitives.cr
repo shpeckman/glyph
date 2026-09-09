@@ -1,6 +1,11 @@
 # src/glyph/primitives.cr
 
 module Glyph
+  enum Mode
+    Icon
+    Font
+  end
+
   enum Format
     Glyf
     Colrv0

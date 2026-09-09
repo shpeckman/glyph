@@ -2,9 +2,10 @@
 
 module Glyph
   class Glossary
-    getter size : Int32
+    getter size   : Int32
+    property mode : Mode
 
-    def initialize
+    def initialize(@mode : Mode = Mode::Icon)
       @entries   = {} of Int32 => Registration
       @order     = Deque(Int32).new
       @free      = Deque(Int32).new
@@ -22,7 +23,7 @@ module Glyph
                  span : Int32 = 1, size : SizeMode = SizeMode::Height,
                  halign : HAlign = HAlign::Center, valign : VAlign = VAlign::Center,
                  pad : Pad = Pad.none) : Registration
-      raise Error.new(Reason::OutOfNamespace) unless Glyph.pua?(cp)
+      raise Error.new(Reason::OutOfNamespace) if @mode.icon? && !Glyph.pua?(cp)
       raise Error.new(Reason::PayloadTooLarge) if payload.size > MAX_PAYLOAD
       span = 1 if span != 2
 
@@ -62,12 +63,12 @@ module Glyph
     def query(cp : Int32, system : Bool = false) : Coverage
       cov = Coverage::None
       cov |= Coverage::System if system
-      cov |= Coverage::Glossary if Glyph.pua?(cp) && @entries.has_key?(cp)
+      cov |= Coverage::Glossary if (@mode.font? || Glyph.pua?(cp)) && @entries.has_key?(cp)
       cov
     end
 
     def clear(cp : Int32) : Bool
-      raise Error.new(Reason::OutOfNamespace) unless Glyph.pua?(cp)
+      raise Error.new(Reason::OutOfNamespace) if @mode.icon? && !Glyph.pua?(cp)
       reg = @entries.delete(cp)
       return true unless reg
       @order.delete(cp)

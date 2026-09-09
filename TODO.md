@@ -1,4 +1,3 @@
-## TODO.md
 ## TODO
 
 Format & Standard Compatibility:
@@ -17,5 +16,4 @@ Performance & Optimization:
 [ ] Parallel Rasterization: Rendering complex `COLRv1` layers or bulk-rendering the `Glossary` could be dispatched to a worker pool (Crystal's `spawn` with `Channel`), scaling rasterization across multiple CPU cores.
 
 Architecture & Scope:
-[ ] Relaxing PUA Restriction: The library strictly enforces `Glyph.pua?(cp)`. If the goal is a general-purpose font engine, abstracting the PUA check into a strict "Icon Mode" vs. a general "Font Mode" would allow users to render standard alphanumeric characters.
-
+[x] Relaxing PUA Restriction: The library strictly enforces `Glyph.pua?(cp)`. If the goal is a general-purpose font engine, abstracting the PUA check into a strict "Icon Mode" vs. a general "Font Mode" would allow users to render standard alphanumeric characters.

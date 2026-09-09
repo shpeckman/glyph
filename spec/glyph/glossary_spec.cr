@@ -12,11 +12,19 @@ describe Glyph::Glossary do
     g[0x100000]?.should_not be_nil
   end
 
-  it "rejects a non-PUA codepoint" do
+  it "rejects a non-PUA codepoint in Icon mode" do
     g     = Glyph::Glossary.new
     error = expect_raises(Glyph::Error) { g.register('a'.ord, square_glyf) }
     error.reason.should eq(Glyph::Reason::OutOfNamespace)
     g.size.should eq(0)
+  end
+
+  it "accepts a non-PUA codepoint in Font mode" do
+    g   = Glyph::Glossary.new(mode: Glyph::Mode::Font)
+    reg = g.register('a'.ord, square_glyf)
+    reg.cp.should eq('a'.ord)
+    g.size.should eq(1)
+    g['a'.ord]?.should_not be_nil
   end
 
   it "overwrites without consuming a second slot" do
@@ -69,10 +77,17 @@ describe Glyph::Glossary do
     g.clear(0x100000).should be_true
   end
 
-  it "rejects clearing a non-PUA codepoint" do
+  it "rejects clearing a non-PUA codepoint in Icon mode" do
     g     = Glyph::Glossary.new
     error = expect_raises(Glyph::Error) { g.clear('z'.ord) }
     error.reason.should eq(Glyph::Reason::OutOfNamespace)
+  end
+
+  it "clears a non-PUA codepoint in Font mode" do
+    g = Glyph::Glossary.new(mode: Glyph::Mode::Font)
+    g.register('z'.ord, square_glyf)
+    g.clear('z'.ord).should be_true
+    g.size.should eq(0)
   end
 
   it "clears every slot" do
@@ -92,6 +107,14 @@ describe Glyph::Glossary do
     g.query(0x100000).code.should eq("glossary")
     g.query(0x100000, system: true).code.should eq("system,glossary")
     g.query('a'.ord, system: true).code.should eq("system")
+  end
+
+  it "hides non-PUA coverage when dynamically switched to Icon mode" do
+    g = Glyph::Glossary.new(mode: Glyph::Mode::Font)
+    g.register('a'.ord, square_glyf)
+    g.query('a'.ord).code.should eq("glossary")
+    g.mode = Glyph::Mode::Icon
+    g.query('a'.ord).should eq(Glyph::Coverage::None)
   end
 
   it "iterates in registration order" do
