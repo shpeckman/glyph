@@ -1,4 +1,5 @@
 # src/glyph/geometry/fill.cr
+# # src/glyph/geometry/fill.cr
 module Glyph
   module Fill
     SUBSAMPLES = 4
@@ -12,6 +13,20 @@ module Glyph
 
       def initialize(@x0 : Float64, @y0 : Float64, @y1 : Float64,
                      @slope : Float64, @dir : Int32)
+      end
+    end
+
+    private struct Crossing
+      include Comparable(Crossing)
+
+      getter x   : Float64
+      getter dir : Int32
+
+      def initialize(@x : Float64, @dir : Int32)
+      end
+
+      def <=>(other : Crossing) : Int32
+        (@x <=> other.x) || 0
       end
     end
 
@@ -39,7 +54,7 @@ module Glyph
       return cov if edges.empty?
 
       amount    = (1.0 / SUBSAMPLES).to_f32
-      crossings = [] of Tuple(Float64, Int32)
+      crossings = [] of Crossing
       y         = 0
       while y < height
         row = y * width
@@ -48,18 +63,18 @@ module Glyph
           sy = y + (s + 0.5) / SUBSAMPLES
           crossings.clear
           edges.each do |ed|
-            crossings << {ed.x0 + (sy - ed.y0) * ed.slope, ed.dir} if ed.y0 <= sy && sy < ed.y1
+            crossings << Crossing.new(ed.x0 + (sy - ed.y0) * ed.slope, ed.dir) if ed.y0 <= sy && sy < ed.y1
           end
           if crossings.size > 1
-            crossings.sort! { |l, r| l[0] <=> r[0] }
+            crossings.sort!
             wind  = 0
             k     = 0
             limit = crossings.size - 1
             while k < limit
-              wind += crossings.unsafe_fetch(k)[1]
+              c_k = crossings.unsafe_fetch(k)
+              wind += c_k.dir
               if wind != 0
-                add_span(cov, row, width,
-                  crossings.unsafe_fetch(k)[0], crossings.unsafe_fetch(k + 1)[0], amount)
+                add_span(cov, row, width, c_k.x, crossings.unsafe_fetch(k + 1).x, amount)
               end
               k += 1
             end

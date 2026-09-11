@@ -145,12 +145,7 @@ module Glyph
           )
         end
 
-        x_min = new_points.empty? ? 0 : new_points.min_of(&.x)
-        y_min = new_points.empty? ? 0 : new_points.min_of(&.y)
-        x_max = new_points.empty? ? 0 : new_points.max_of(&.x)
-        y_max = new_points.empty? ? 0 : new_points.max_of(&.y)
-
-        mutated << Outline.new(new_points, outline.ends, x_min, y_min, x_max, y_max)
+        mutated << Outline.from_points(new_points, outline.ends)
       end
 
       mutated

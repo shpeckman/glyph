@@ -213,17 +213,9 @@ module Glyph
         end
       end
 
-      x_min = 0; y_min = 0; x_max = 0; y_max = 0
-      if points.size > 0
-        x_min = points.min_of(&.x)
-        y_min = points.min_of(&.y)
-        x_max = points.max_of(&.x)
-        y_max = points.max_of(&.y)
-      end
-
       s_points = Slice(Point).new(points.size) { |idx| points.unsafe_fetch(idx) }
       s_ends   = Slice(Int32).new(ends.size) { |idx| ends.unsafe_fetch(idx) }
-      Outline.new(s_points, s_ends, x_min, y_min, x_max, y_max)
+      Outline.from_points(s_points, s_ends)
     rescue IndexError
       raise Error.new(Reason::MalformedPayload)
     end

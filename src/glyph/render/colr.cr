@@ -1,4 +1,5 @@
 # src/glyph/render/colr.cr
+# # src/glyph/render/colr.cr
 module Glyph
   class ColrRenderer
     def initialize(@outlines : Array(Outline), @colr : Bytes,
@@ -19,21 +20,20 @@ module Glyph
       if version >= 1
         @base_glyph_list = r.u32.to_i32
         @layer_list      = r.u32.to_i32
-        return if @base_glyph_list > 0 && paint_v1(target, root)
+        return if @base_glyph_list > 0 && paint_v1(target, root, r)
       end
 
       render_v0(target, root, r, num_base, base_offset, layer_offset, num_layers)
     end
 
-    private def paint_v1(target : Bitmap, root : Transform) : Bool
-      offset = base_paint_offset(0)
+    private def paint_v1(target : Bitmap, root : Transform, r : Reader) : Bool
+      offset = base_paint_offset(0, r)
       return false unless offset
-      paint(target, offset, root, nil, 0)
+      paint(target, offset, root, nil, 0, r)
       true
     end
 
-    private def base_paint_offset(glyph_id : Int32) : Int32?
-      r = Reader.new(@colr)
+    private def base_paint_offset(glyph_id : Int32, r : Reader) : Int32?
       r.seek(@base_glyph_list)
       count = r.u32.to_i32
       i     = 0
@@ -80,9 +80,8 @@ module Glyph
     end
 
     private def paint(target : Bitmap, offset : Int32, tf : Transform,
-                      clip : Slice(Float32)?, depth : Int32) : Nil
+                      clip : Slice(Float32)?, depth : Int32, r : Reader) : Nil
       return if depth > MAX_DEPTH
-      r = Reader.new(@colr)
       r.seek(offset)
       format = r.u8.to_i32
 
@@ -91,15 +90,15 @@ module Glyph
         n     = r.u8.to_i32
         first = r.u32.to_i32
         return if @layer_list <= 0
-        lr = Reader.new(@colr)
-        lr.seek(@layer_list)
-        total = lr.u32.to_i32
+        r.seek(@layer_list)
+        total = r.u32.to_i32
         i     = 0
         while i < n
           idx = first + i
           break if idx >= total
-          lr.seek(@layer_list + 4 + idx * 4)
-          paint(target, @layer_list + lr.u32.to_i32, tf, clip, depth + 1)
+          r.seek(@layer_list + 4 + idx * 4)
+          child_off = @layer_list + r.u32.to_i32
+          paint(target, child_off, tf, clip, depth + 1, r)
           i += 1
         end
       when 2, 3
@@ -107,30 +106,33 @@ module Glyph
         alpha = r.f2dot14
         target.blend(clip, SolidPaint.new(color_for(pal, alpha)))
       when 4, 5
-        line = color_line(offset + r.u24, format == 5)
-        x0   = r.i16.to_f
-        y0   = r.i16.to_f
-        x1   = r.i16.to_f
-        y1   = r.i16.to_f
-        x2   = r.i16.to_f
-        y2   = r.i16.to_f
+        cline_off = offset + r.u24
+        x0        = r.i16.to_f
+        y0        = r.i16.to_f
+        x1        = r.i16.to_f
+        y1        = r.i16.to_f
+        x2        = r.i16.to_f
+        y2        = r.i16.to_f
+        line      = color_line(cline_off, format == 5, r)
         target.blend(clip, linear_paint(line, tf, x0, y0, x1, y1, x2, y2))
       when 6, 7
-        line    = color_line(offset + r.u24, format == 7)
-        x0      = r.i16.to_f
-        y0      = r.i16.to_f
-        r0      = r.u16.to_f
-        x1      = r.i16.to_f
-        y1      = r.i16.to_f
-        r1      = r.u16.to_f
-        inverse = tf.invert
+        cline_off = offset + r.u24
+        x0        = r.i16.to_f
+        y0        = r.i16.to_f
+        r0        = r.u16.to_f
+        x1        = r.i16.to_f
+        y1        = r.i16.to_f
+        r1        = r.u16.to_f
+        line      = color_line(cline_off, format == 7, r)
+        inverse   = tf.invert
         if inverse
           target.blend(clip, RadialPaint.new(line, inverse, x0, y0, r0, x1, y1, r1))
         else
           target.blend(clip, SolidPaint.new(line.sample(0.0)))
         end
       when 8, 9
-        line = color_line(offset + r.u24, format == 9)
+        cline_off = offset + r.u24
+        line      = color_line(cline_off, format == 9, r)
         target.blend(clip, SolidPaint.new(line.sample(0.0)))
       when 10
         child = offset + r.u24
@@ -138,23 +140,22 @@ module Glyph
         mask  = glyph_mask(gid, tf)
         return unless mask
         merged = clip ? Fill.intersect(clip, mask) : mask
-        paint(target, child, tf, merged, depth + 1)
+        paint(target, child, tf, merged, depth + 1, r)
       when 11
         gid   = r.u16.to_i32
-        child = base_paint_offset(gid)
-        paint(target, child, tf, clip, depth + 1) if child
+        child = base_paint_offset(gid, r)
+        paint(target, child, tf, clip, depth + 1, r) if child
       when 12, 13
         child = offset + r.u24
         toff  = offset + r.u24
-        tr    = Reader.new(@colr)
-        tr.seek(toff)
-        m = Transform.new(tr.fixed, tr.fixed, tr.fixed, tr.fixed, tr.fixed, tr.fixed)
-        paint(target, child, tf.concat(m), clip, depth + 1)
+        r.seek(toff)
+        m = Transform.new(r.fixed, r.fixed, r.fixed, r.fixed, r.fixed, r.fixed)
+        paint(target, child, tf.concat(m), clip, depth + 1, r)
       when 14, 15
         child = offset + r.u24
         dx    = r.i16.to_f
         dy    = r.i16.to_f
-        paint(target, child, tf.concat(Transform.translate(dx, dy)), clip, depth + 1)
+        paint(target, child, tf.concat(Transform.translate(dx, dy)), clip, depth + 1, r)
       when 16, 17, 18, 19, 20, 21, 22, 23
         child = offset + r.u24
         if format < 20
@@ -166,23 +167,23 @@ module Glyph
         end
         m = Transform.scale(sx, sy)
         m = m.around(r.i16.to_f, r.i16.to_f) if format == 18 || format == 19 || format == 22 || format == 23
-        paint(target, child, tf.concat(m), clip, depth + 1)
+        paint(target, child, tf.concat(m), clip, depth + 1, r)
       when 24, 25, 26, 27
         child = offset + r.u24
         m     = Transform.rotate(r.f2dot14 * Math::PI)
         m     = m.around(r.i16.to_f, r.i16.to_f) if format == 26 || format == 27
-        paint(target, child, tf.concat(m), clip, depth + 1)
+        paint(target, child, tf.concat(m), clip, depth + 1, r)
       when 28, 29, 30, 31
         child = offset + r.u24
         m     = Transform.skew(r.f2dot14 * Math::PI, r.f2dot14 * Math::PI)
         m     = m.around(r.i16.to_f, r.i16.to_f) if format == 30 || format == 31
-        paint(target, child, tf.concat(m), clip, depth + 1)
+        paint(target, child, tf.concat(m), clip, depth + 1, r)
       when 32
         source = offset + r.u24
         r.u8
         backdrop = offset + r.u24
-        paint(target, backdrop, tf, clip, depth + 1)
-        paint(target, source, tf, clip, depth + 1)
+        paint(target, backdrop, tf, clip, depth + 1, r)
+        paint(target, source, tf, clip, depth + 1, r)
       end
     end
 
@@ -209,8 +210,7 @@ module Glyph
       LinearPaint.new(line, inverse, x0, y0, dx, dy, len2)
     end
 
-    private def color_line(offset : Int32, variable : Bool) : ColorLine
-      r = Reader.new(@colr)
+    private def color_line(offset : Int32, variable : Bool, r : Reader) : ColorLine
       r.seek(offset)
       mode = case r.u8
              when 1 then Extend::Repeat

@@ -1,4 +1,5 @@
 # src/glyph/primitives.cr
+# # src/glyph/primitives.cr
 
 module Glyph
   enum Mode
@@ -148,6 +149,20 @@ module Glyph
 
     def self.blank(x_min = 0, y_min = 0, x_max = 0, y_max = 0) : Outline
       new(Slice(Point).empty, Slice(Int32).empty, x_min, y_min, x_max, y_max)
+    end
+
+    def self.from_points(points : Slice(Point), ends : Slice(Int32)) : Outline
+      x_min = 0
+      y_min = 0
+      x_max = 0
+      y_max = 0
+      if points.size > 0
+        x_min = points.min_of(&.x)
+        y_min = points.min_of(&.y)
+        x_max = points.max_of(&.x)
+        y_max = points.max_of(&.y)
+      end
+      new(points, ends, x_min, y_min, x_max, y_max)
     end
 
     def empty? : Bool
