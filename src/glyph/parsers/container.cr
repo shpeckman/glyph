@@ -1,5 +1,4 @@
 # src/glyph/parsers/container.cr
-# # src/glyph/parsers/container.cr
 
 module Glyph
   struct Container
@@ -13,10 +12,10 @@ module Glyph
     end
 
     def self.parse(bytes : Bytes) : Container
-      raise Error.new(Reason::PayloadTooLarge) if bytes.size > MAX_PAYLOAD
+      raise Error.new(Error::Reason::PayloadTooLarge) if bytes.size > MAX_PAYLOAD
       r     = Reader.new(bytes)
       count = r.u16.to_i32
-      raise Error.new(Reason::MalformedPayload) if count < 1 || count > MAX_CONTAINER
+      raise Error.new(Error::Reason::MalformedPayload) if count < 1 || count > MAX_CONTAINER
 
       outlines = Array(Outline).new(count)
       budget   = 0
@@ -26,7 +25,7 @@ module Glyph
         len     = r.u16.to_i32
         outline = Glyf.parse(r.slice(len), outlines)
         budget += outline.point_count * POINT_COST
-        raise Error.new(Reason::OutlineTooLarge) if budget > DECODED_BUDGET
+        raise Error.new(Error::Reason::OutlineTooLarge) if budget > DECODED_BUDGET
         outlines << outline
         i += 1
       end
@@ -45,7 +44,7 @@ module Glyph
 
       Container.new(outlines, colr, cpal, fvar, gvar)
     rescue IndexError
-      raise Error.new(Reason::MalformedPayload)
+      raise Error.new(Error::Reason::MalformedPayload)
     end
   end
 end

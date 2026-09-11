@@ -1,5 +1,4 @@
 # src/glyph/parsers/glyf.cr
-# # src/glyph/parsers/glyf.cr
 
 module Glyph
   module Glyf
@@ -18,7 +17,7 @@ module Glyph
     WE_HAVE_A_TWO_BY_TWO     = 0x0080
 
     def self.parse(bytes : Bytes, outlines : Array(Outline)? = nil) : Outline
-      raise Error.new(Reason::PayloadTooLarge) if bytes.size > MAX_PAYLOAD
+      raise Error.new(Error::Reason::PayloadTooLarge) if bytes.size > MAX_PAYLOAD
       parse(Reader.new(bytes), outlines)
     end
 
@@ -40,14 +39,14 @@ module Glyph
       i    = 0
       while i < n_contours
         e = r.u16.to_i32
-        raise Error.new(Reason::MalformedPayload) if e <= prev
+        raise Error.new(Error::Reason::MalformedPayload) if e <= prev
         ends[i] = e
         prev = e
         i += 1
       end
 
       n_points = prev + 1
-      raise Error.new(Reason::OutlineTooLarge) if n_points > MAX_POINTS
+      raise Error.new(Error::Reason::OutlineTooLarge) if n_points > MAX_POINTS
 
       instruction_length = r.u16.to_i32
       r.seek(r.pos + instruction_length)
@@ -60,7 +59,7 @@ module Glyph
         i += 1
         next if (flag & REPEAT) == 0
         rep = r.u8.to_i32
-        raise Error.new(Reason::MalformedPayload) if i + rep > n_points
+        raise Error.new(Error::Reason::MalformedPayload) if i + rep > n_points
         k = 0
         while k < rep
           flags[i] = flag
@@ -101,11 +100,11 @@ module Glyph
 
       Outline.new(points, ends, x_min, y_min, x_max, y_max)
     rescue IndexError
-      raise Error.new(Reason::MalformedPayload)
+      raise Error.new(Error::Reason::MalformedPayload)
     end
 
     private def self.parse_composite(r : Reader, outlines : Array(Outline)?, x_min : Int32, y_min : Int32, x_max : Int32, y_max : Int32) : Outline
-      raise Error.new(Reason::MalformedPayload) unless outlines
+      raise Error.new(Error::Reason::MalformedPayload) unless outlines
 
       all_points = [] of Point
       all_ends   = [] of Int32

@@ -1,5 +1,4 @@
 # spec/glyph/glossary_spec.cr
-# # spec/glyph/glossary_spec.cr
 require "../spec_helper"
 
 describe Glyph::Glossary do
@@ -16,7 +15,7 @@ describe Glyph::Glossary do
   it "rejects a non-PUA codepoint in Icon mode" do
     g     = Glyph::Glossary.new
     error = expect_raises(Glyph::Error) { g.register('a'.ord, square_glyf) }
-    error.reason.should eq(Glyph::Reason::OutOfNamespace)
+    error.reason.should eq(Glyph::Error::Reason::OutOfNamespace)
     g.size.should eq(0)
   end
 
@@ -114,7 +113,7 @@ describe Glyph::Glossary do
   it "rejects clearing a non-PUA codepoint in Icon mode" do
     g     = Glyph::Glossary.new
     error = expect_raises(Glyph::Error) { g.clear('z'.ord) }
-    error.reason.should eq(Glyph::Reason::OutOfNamespace)
+    error.reason.should eq(Glyph::Error::Reason::OutOfNamespace)
   end
 
   it "clears a non-PUA codepoint in Font mode" do

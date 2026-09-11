@@ -1,5 +1,4 @@
 # src/glyph/glossary.cr
-# # src/glyph/glossary.cr
 require "sync"
 
 module Glyph
@@ -26,8 +25,8 @@ module Glyph
                  span : Int32 = 1, size : SizeMode = SizeMode::Height,
                  halign : HAlign = HAlign::Center, valign : VAlign = VAlign::Center,
                  pad : Pad = Pad.none, axes : Hash(String, Float64)? = nil) : Registration
-      raise Error.new(Reason::OutOfNamespace) if @mode.icon? && !Glyph.pua?(cp)
-      raise Error.new(Reason::PayloadTooLarge) if payload.size > MAX_PAYLOAD
+      raise Error.new(Error::Reason::OutOfNamespace) if @mode.icon? && !Glyph.pua?(cp)
+      raise Error.new(Error::Reason::PayloadTooLarge) if payload.size > MAX_PAYLOAD
       span = 1 if span != 2
 
       outlines = [] of Outline
@@ -37,11 +36,11 @@ module Glyph
       case format
       when .glyf?
         outline = Glyf.parse(payload)
-        raise Error.new(Reason::OutlineTooLarge) if outline.point_count * POINT_COST > DECODED_BUDGET
+        raise Error.new(Error::Reason::OutlineTooLarge) if outline.point_count * POINT_COST > DECODED_BUDGET
         outlines << outline
       when .cff?
         outline = Cff.parse(payload)
-        raise Error.new(Reason::OutlineTooLarge) if outline.point_count * POINT_COST > DECODED_BUDGET
+        raise Error.new(Error::Reason::OutlineTooLarge) if outline.point_count * POINT_COST > DECODED_BUDGET
         outlines << outline
       else
         container = Container.parse(payload)
@@ -84,7 +83,7 @@ module Glyph
     end
 
     def clear(cp : Int32) : Bool
-      raise Error.new(Reason::OutOfNamespace) if @mode.icon? && !Glyph.pua?(cp)
+      raise Error.new(Error::Reason::OutOfNamespace) if @mode.icon? && !Glyph.pua?(cp)
       @lock.write do
         reg = @entries.delete(cp)
         return true unless reg

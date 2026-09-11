@@ -101,7 +101,7 @@ describe Glyph::Glyf do
     4.times { io.write_bytes(0_i16, BE) }
     io.write_bytes((Glyph::MAX_POINTS + 1).to_u16, BE)
     error = expect_raises(Glyph::Error) { Glyph::Glyf.parse(io.to_slice) }
-    error.reason.should eq(Glyph::Reason::OutlineTooLarge)
+    error.reason.should eq(Glyph::Error::Reason::OutlineTooLarge)
   end
 
   it "accepts an outline exactly at the budget boundary" do
@@ -110,12 +110,12 @@ describe Glyph::Glyf do
 
   it "rejects an oversized payload" do
     error = expect_raises(Glyph::Error) { Glyph::Glyf.parse(Bytes.new(Glyph::MAX_PAYLOAD + 1)) }
-    error.reason.should eq(Glyph::Reason::PayloadTooLarge)
+    error.reason.should eq(Glyph::Error::Reason::PayloadTooLarge)
   end
 
   it "rejects a truncated record" do
     error = expect_raises(Glyph::Error) { Glyph::Glyf.parse(Bytes[0_u8, 1_u8]) }
-    error.reason.should eq(Glyph::Reason::MalformedPayload)
+    error.reason.should eq(Glyph::Error::Reason::MalformedPayload)
   end
 
   it "rejects non-monotonic contour ends" do
@@ -125,6 +125,6 @@ describe Glyph::Glyf do
     io.write_bytes(5_u16, BE)
     io.write_bytes(3_u16, BE)
     error = expect_raises(Glyph::Error) { Glyph::Glyf.parse(io.to_slice) }
-    error.reason.should eq(Glyph::Reason::MalformedPayload)
+    error.reason.should eq(Glyph::Error::Reason::MalformedPayload)
   end
 end

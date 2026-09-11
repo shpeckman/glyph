@@ -41,6 +41,6 @@ describe Glyph::Container do
     io = IO::Memory.new
     io.write_bytes(0_u16, BE)
     error = expect_raises(Glyph::Error) { Glyph::Container.parse(io.to_slice) }
-    error.reason.should eq(Glyph::Reason::MalformedPayload)
+    error.reason.should eq(Glyph::Error::Reason::MalformedPayload)
   end
 end

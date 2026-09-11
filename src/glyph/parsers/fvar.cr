@@ -34,7 +34,7 @@ module Glyph
       end
       axes
     rescue IndexError
-      raise Error.new(Reason::MalformedPayload)
+      raise Error.new(Error::Reason::MalformedPayload)
     end
 
     def self.normalize(axes : Array(Axis), coords : Hash(String, Float64)) : Array(Float64)

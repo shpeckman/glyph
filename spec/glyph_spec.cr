@@ -1,5 +1,4 @@
 # spec/glyph_spec.cr
-# # spec/glyph_spec.cr
 require "./spec_helper"
 
 describe Glyph do
@@ -21,10 +20,10 @@ describe Glyph do
 
   describe "reason codes" do
     it "renders the spec's snake_case names" do
-      Glyph::Reason::OutOfNamespace.code.should eq("out_of_namespace")
-      Glyph::Reason::OutlineTooLarge.code.should eq("outline_too_large")
-      Glyph::Reason::MalformedPayload.code.should eq("malformed_payload")
-      Glyph::Reason::PayloadTooLarge.code.should eq("payload_too_large")
+      Glyph::Error::Reason::OutOfNamespace.code.should eq("out_of_namespace")
+      Glyph::Error::Reason::OutlineTooLarge.code.should eq("outline_too_large")
+      Glyph::Error::Reason::MalformedPayload.code.should eq("malformed_payload")
+      Glyph::Error::Reason::PayloadTooLarge.code.should eq("payload_too_large")
     end
   end
 

@@ -12,7 +12,7 @@ module Glyph
     end
 
     def seek(pos : Int32) : Nil
-      raise Error.new(Reason::MalformedPayload) if pos < 0 || pos > @bytes.size
+      raise Error.new(Error::Reason::MalformedPayload) if pos < 0 || pos > @bytes.size
       @pos = pos
     end
 
@@ -74,7 +74,7 @@ module Glyph
     end
 
     def slice(len : Int32) : Bytes
-      raise Error.new(Reason::MalformedPayload) if len < 0
+      raise Error.new(Error::Reason::MalformedPayload) if len < 0
       need(len)
       v = @bytes[@pos, len]
       @pos += len
@@ -82,7 +82,7 @@ module Glyph
     end
 
     private def need(n : Int32) : Nil
-      raise Error.new(Reason::MalformedPayload) if @pos + n > @bytes.size
+      raise Error.new(Error::Reason::MalformedPayload) if @pos + n > @bytes.size
     end
   end
 end

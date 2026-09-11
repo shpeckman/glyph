@@ -1,5 +1,4 @@
 # src/glyph/parsers/gvar.cr
-# # src/glyph/parsers/gvar.cr
 module Glyph
   module Gvar
     private struct TupleHeader
@@ -63,7 +62,7 @@ module Glyph
             axis_count.times { peak << r.f2dot14 }
           else
             idx_masked = idx & 0x0FFF
-            raise Error.new(Reason::MalformedPayload) if idx_masked >= shared_tuples.size
+            raise Error.new(Error::Reason::MalformedPayload) if idx_masked >= shared_tuples.size
             peak = shared_tuples.unsafe_fetch(idx_masked)
           end
 
@@ -150,7 +149,7 @@ module Glyph
 
       mutated
     rescue IndexError
-      raise Error.new(Reason::MalformedPayload)
+      raise Error.new(Error::Reason::MalformedPayload)
     end
 
     private def self.calculate_scalar(coords : Array(Float64), peak : Array(Float64), start_coords : Array(Float64)?, end_coords : Array(Float64)?) : Float64

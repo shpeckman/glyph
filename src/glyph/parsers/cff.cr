@@ -1,5 +1,4 @@
 # src/glyph/parsers/cff.cr
-# # src/glyph/parsers/cff.cr
 module Glyph
   module Cff
     def self.parse(bytes : Bytes) : Outline
@@ -217,7 +216,7 @@ module Glyph
       s_ends   = Slice(Int32).new(ends.size) { |idx| ends.unsafe_fetch(idx) }
       Outline.from_points(s_points, s_ends)
     rescue IndexError
-      raise Error.new(Reason::MalformedPayload)
+      raise Error.new(Error::Reason::MalformedPayload)
     end
 
     private def self.emit(points : Array(Point), x : Float64, y : Float64, type : PointType)
