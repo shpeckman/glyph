@@ -1,5 +1,4 @@
 # src/glyph/render/colr.cr
-# # src/glyph/render/colr.cr
 module Glyph
   class ColrRenderer
     def initialize(@outlines : Array(Outline), @colr : Bytes,

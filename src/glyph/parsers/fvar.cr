@@ -1,5 +1,4 @@
 # src/glyph/parsers/fvar.cr
-# # src/glyph/parsers/fvar.cr
 module Glyph
   module Fvar
     struct Axis

@@ -1,5 +1,4 @@
 # src/glyph/geometry/fill.cr
-# # src/glyph/geometry/fill.cr
 module Glyph
   module Fill
     SUBSAMPLES = 4

@@ -1,6 +1,4 @@
 # src/glyph/primitives.cr
-# # src/glyph/primitives.cr
-
 module Glyph
   enum Mode
     Icon

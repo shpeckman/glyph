@@ -1,5 +1,4 @@
 # src/glyph/layout.cr
-# # src/glyph/layout.cr
 module Glyph
   module Layout
     def self.resolve(reg : Registration, cell_width : Int32, cell_height : Int32,

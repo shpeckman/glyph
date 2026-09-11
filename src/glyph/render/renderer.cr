@@ -1,6 +1,4 @@
 # src/glyph/render/renderer.cr
-# # src/glyph/render/renderer.cr
-
 module Glyph
   struct Image
     getter width  : Int32
