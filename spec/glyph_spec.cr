@@ -29,12 +29,12 @@ describe Glyph do
   end
 
   describe "format names" do
-    it "round-trips the four format names" do
+    it "round-trips the format names" do
       Glyph::Format.from_code?("glyf").should eq(Glyph::Format::Glyf)
-      Glyph::Format.from_code?("colrv1").should eq(Glyph::Format::Colrv1)
+      Glyph::Format.from_code?("colr").should eq(Glyph::Format::Colr)
       Glyph::Format.from_code?("cff").should eq(Glyph::Format::Cff)
       Glyph::Format.from_code?("sixel").should be_nil
-      Glyph::Format::Colrv0.code.should eq("colrv0")
+      Glyph::Format::Colr.code.should eq("colr")
     end
   end
 

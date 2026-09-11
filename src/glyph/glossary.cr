@@ -1,5 +1,6 @@
 # src/glyph/glossary.cr
 # # src/glyph/glossary.cr
+require "sync"
 
 module Glyph
   class Glossary
@@ -13,10 +14,11 @@ module Glyph
       @next_slot = 0
       @next_tag  = 1_u64
       @size      = 0
+      @lock      = Sync::RWLock.new
     end
 
     def []?(cp : Int32) : Registration?
-      @entries[cp]?
+      @lock.read { @entries[cp]? }
     end
 
     def register(cp : Int32, payload : Bytes, format : Format = Format::Glyf,
@@ -54,50 +56,60 @@ module Glyph
         end
       end
 
-      existing = @entries[cp]?
-      slot     = existing ? existing.slot : acquire_slot
-      reg = Registration.new(cp, format, Metrics.new(upm, aw, lh), span, size,
-        halign, valign, pad, outlines, colr, palette, next_tag, slot)
+      @lock.write do
+        existing = @entries[cp]?
+        slot     = existing ? existing.slot : acquire_slot
+        reg = Registration.new(cp, format, Metrics.new(upm, aw, lh), span, size,
+          halign, valign, pad, outlines, colr, palette, next_tag, slot)
 
-      if existing
-        @order.delete(cp)
-        @order.push(cp)
-      else
-        @order.push(cp)
-        @size += 1
+        if existing
+          @order.delete(cp)
+          @order.push(cp)
+        else
+          @order.push(cp)
+          @size += 1
+        end
+        @entries[cp] = reg
+        reg
       end
-      @entries[cp] = reg
-      reg
     end
 
     def query(cp : Int32, system : Bool = false) : Coverage
       cov = Coverage::None
       cov |= Coverage::System if system
-      cov |= Coverage::Glossary if (@mode.font? || Glyph.pua?(cp)) && @entries.has_key?(cp)
+      @lock.read do
+        cov |= Coverage::Glossary if (@mode.font? || Glyph.pua?(cp)) && @entries.has_key?(cp)
+      end
       cov
     end
 
     def clear(cp : Int32) : Bool
       raise Error.new(Reason::OutOfNamespace) if @mode.icon? && !Glyph.pua?(cp)
-      reg = @entries.delete(cp)
-      return true unless reg
-      @order.delete(cp)
-      @free.push(reg.slot)
-      @size -= 1
-      true
+      @lock.write do
+        reg = @entries.delete(cp)
+        return true unless reg
+        @order.delete(cp)
+        @free.push(reg.slot)
+        @size -= 1
+        true
+      end
     end
 
     def clear_all : Nil
-      @entries.each_value { |reg| @free.push(reg.slot) }
-      @entries.clear
-      @order.clear
-      @size = 0
+      @lock.write do
+        @entries.each_value { |reg| @free.push(reg.slot) }
+        @entries.clear
+        @order.clear
+        @size = 0
+      end
     end
 
     def each(& : Registration ->) : Nil
-      @order.each do |cp|
-        reg = @entries[cp]?
-        yield reg if reg
+      @lock.read do
+        @order.each do |cp|
+          reg = @entries[cp]?
+          yield reg if reg
+        end
       end
     end
 

@@ -1,4 +1,5 @@
 # spec/glyph/glossary_spec.cr
+# # spec/glyph/glossary_spec.cr
 require "../spec_helper"
 
 describe Glyph::Glossary do
@@ -34,7 +35,7 @@ describe Glyph::Glossary do
     payload = container([square_glyf(1000, 1000)], colr_v0_table(0, 0), Bytes.empty, fvar, gvar)
 
     g   = Glyph::Glossary.new
-    reg = g.register(0x100000, payload, format: Glyph::Format::Colrv0, axes: {"wght" => 900.0})
+    reg = g.register(0x100000, payload, format: Glyph::Format::Colr, axes: {"wght" => 900.0})
 
     outline = reg.outlines.first
     outline.points[0].x.should eq(50)

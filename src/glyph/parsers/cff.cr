@@ -21,23 +21,23 @@ module Glyph
             dy = stack.pop
             dx = stack.pop
             x += dx; y += dy
-            points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+            emit(points, x, y, PointType::OnCurve)
             stack.clear
           when 4
             ends << (points.size - 1) if points.size > 0 && (ends.empty? || ends.last != points.size - 1)
             y += stack.pop
-            points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+            emit(points, x, y, PointType::OnCurve)
             stack.clear
           when 22
             ends << (points.size - 1) if points.size > 0 && (ends.empty? || ends.last != points.size - 1)
             x += stack.pop
-            points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+            emit(points, x, y, PointType::OnCurve)
             stack.clear
           when 5
             i = 0
             while i < stack.size
               x += stack[i]; y += stack[i + 1]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+              emit(points, x, y, PointType::OnCurve)
               i += 2
             end
             stack.clear
@@ -49,7 +49,7 @@ module Glyph
               else
                 y += stack[i]
               end
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+              emit(points, x, y, PointType::OnCurve)
               i += 1
             end
             stack.clear
@@ -61,7 +61,7 @@ module Glyph
               else
                 x += stack[i]
               end
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+              emit(points, x, y, PointType::OnCurve)
               i += 1
             end
             stack.clear
@@ -69,11 +69,11 @@ module Glyph
             i = 0
             while i < stack.size
               x += stack[i]; y += stack[i + 1]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+              emit(points, x, y, PointType::Cubic)
               x += stack[i + 2]; y += stack[i + 3]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+              emit(points, x, y, PointType::Cubic)
               x += stack[i + 4]; y += stack[i + 5]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+              emit(points, x, y, PointType::OnCurve)
               i += 6
             end
             stack.clear
@@ -81,32 +81,32 @@ module Glyph
             i = 0
             while i < stack.size - 2
               x += stack[i]; y += stack[i + 1]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+              emit(points, x, y, PointType::Cubic)
               x += stack[i + 2]; y += stack[i + 3]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+              emit(points, x, y, PointType::Cubic)
               x += stack[i + 4]; y += stack[i + 5]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+              emit(points, x, y, PointType::OnCurve)
               i += 6
             end
             if i < stack.size
               x += stack[i]; y += stack[i + 1]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+              emit(points, x, y, PointType::OnCurve)
             end
             stack.clear
           when 25
             i = 0
             while i < stack.size - 6
               x += stack[i]; y += stack[i + 1]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+              emit(points, x, y, PointType::OnCurve)
               i += 2
             end
             if i < stack.size
               x += stack[i]; y += stack[i + 1]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+              emit(points, x, y, PointType::Cubic)
               x += stack[i + 2]; y += stack[i + 3]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+              emit(points, x, y, PointType::Cubic)
               x += stack[i + 4]; y += stack[i + 5]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+              emit(points, x, y, PointType::OnCurve)
             end
             stack.clear
           when 26
@@ -117,11 +117,11 @@ module Glyph
             end
             while i < stack.size
               x += 0.0; y += stack[i]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+              emit(points, x, y, PointType::Cubic)
               x += stack[i + 1]; y += stack[i + 2]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+              emit(points, x, y, PointType::Cubic)
               x += 0.0; y += stack[i + 3]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+              emit(points, x, y, PointType::OnCurve)
               i += 4
             end
             stack.clear
@@ -133,11 +133,11 @@ module Glyph
             end
             while i < stack.size
               x += stack[i]; y += 0.0
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+              emit(points, x, y, PointType::Cubic)
               x += stack[i + 1]; y += stack[i + 2]
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+              emit(points, x, y, PointType::Cubic)
               x += stack[i + 3]; y += 0.0
-              points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+              emit(points, x, y, PointType::OnCurve)
               i += 4
             end
             stack.clear
@@ -146,18 +146,18 @@ module Glyph
             while i < stack.size
               if ((i / 4) % 2) == 0
                 x += 0.0; y += stack[i]
-                points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+                emit(points, x, y, PointType::Cubic)
                 x += stack[i + 1]; y += stack[i + 2]
-                points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+                emit(points, x, y, PointType::Cubic)
                 x += stack[i + 3]; y += (i + 4 == stack.size && stack.size % 4 == 1 ? stack[i + 4] : 0.0)
-                points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+                emit(points, x, y, PointType::OnCurve)
               else
                 x += stack[i]; y += 0.0
-                points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+                emit(points, x, y, PointType::Cubic)
                 x += stack[i + 1]; y += stack[i + 2]
-                points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+                emit(points, x, y, PointType::Cubic)
                 y += stack[i + 3]; x += (i + 4 == stack.size && stack.size % 4 == 1 ? stack[i + 4] : 0.0)
-                points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+                emit(points, x, y, PointType::OnCurve)
               end
               i += (i + 4 == stack.size && stack.size % 4 == 1 ? 5 : 4)
             end
@@ -167,18 +167,18 @@ module Glyph
             while i < stack.size
               if ((i / 4) % 2) == 0
                 x += stack[i]; y += 0.0
-                points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+                emit(points, x, y, PointType::Cubic)
                 x += stack[i + 1]; y += stack[i + 2]
-                points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+                emit(points, x, y, PointType::Cubic)
                 y += stack[i + 3]; x += (i + 4 == stack.size && stack.size % 4 == 1 ? stack[i + 4] : 0.0)
-                points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+                emit(points, x, y, PointType::OnCurve)
               else
                 x += 0.0; y += stack[i]
-                points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+                emit(points, x, y, PointType::Cubic)
                 x += stack[i + 1]; y += stack[i + 2]
-                points << Point.new(x.round.to_i32, y.round.to_i32, PointType::Cubic)
+                emit(points, x, y, PointType::Cubic)
                 x += stack[i + 3]; y += (i + 4 == stack.size && stack.size % 4 == 1 ? stack[i + 4] : 0.0)
-                points << Point.new(x.round.to_i32, y.round.to_i32, PointType::OnCurve)
+                emit(points, x, y, PointType::OnCurve)
               end
               i += (i + 4 == stack.size && stack.size % 4 == 1 ? 5 : 4)
             end
@@ -218,6 +218,10 @@ module Glyph
       Outline.from_points(s_points, s_ends)
     rescue IndexError
       raise Error.new(Reason::MalformedPayload)
+    end
+
+    private def self.emit(points : Array(Point), x : Float64, y : Float64, type : PointType)
+      points << Point.new(x.round.to_i32, y.round.to_i32, type)
     end
   end
 end

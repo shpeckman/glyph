@@ -9,25 +9,22 @@ module Glyph
 
   enum Format
     Glyf
-    Colrv0
-    Colrv1
+    Colr
     Cff
 
     def code : String
       case self
-      in .glyf?   then "glyf"
-      in .colrv0? then "colrv0"
-      in .colrv1? then "colrv1"
-      in .cff?    then "cff"
+      in .glyf? then "glyf"
+      in .colr? then "colr"
+      in .cff?  then "cff"
       end
     end
 
     def self.from_code?(name : String) : Format?
       case name
-      when "glyf"   then Glyf
-      when "colrv0" then Colrv0
-      when "colrv1" then Colrv1
-      when "cff"    then Cff
+      when "glyf" then Glyf
+      when "colr" then Colr
+      when "cff"  then Cff
       end
     end
   end

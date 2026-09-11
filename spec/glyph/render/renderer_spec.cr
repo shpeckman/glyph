@@ -87,7 +87,7 @@ describe Glyph::Renderer do
     cpal = cpal_table([{255_u8, 0_u8, 0_u8, 255_u8}])
 
     g   = Glyph::Glossary.new
-    reg = g.register(0x100000, container([square_glyf], colr, cpal), format: Glyph::Format::Colrv0)
+    reg = g.register(0x100000, container([square_glyf], colr, cpal), format: Glyph::Format::Colr)
 
     renderer = Glyph::Renderer.new(8, 16, 16)
     image    = renderer.render(reg, 0xffffff_u32)
@@ -126,7 +126,7 @@ describe Glyph::Renderer do
     # Fractional horizontal coverage to clearly show RGB subpixel fringing
     reg_subpx = g.register(0x100000, square_glyf(333, 1000), size: Glyph::SizeMode::Stretch)
 
-    # Overlapping COLRv0 layers to clearly show Gamma-Correct alpha blending
+    # Overlapping COLR layers to clearly show Gamma-Correct alpha blending
     # (Semi-transparent Green over Solid Red)
     io = IO::Memory.new
     io.write_bytes(0_u16, BE)
@@ -143,7 +143,7 @@ describe Glyph::Renderer do
     io.write_bytes(1_u16, BE) # Layer 1: Palette 1
     colr      = io.to_slice
     cpal      = cpal_table([{255_u8, 0_u8, 0_u8, 255_u8}, {0_u8, 255_u8, 0_u8, 128_u8}])
-    reg_gamma = g.register(0x100001, container([square_glyf(1000, 1000)], colr, cpal), format: Glyph::Format::Colrv0)
+    reg_gamma = g.register(0x100001, container([square_glyf(1000, 1000)], colr, cpal), format: Glyph::Format::Colr)
 
     renderer = Glyph::Renderer.new(16, 32, 32)
 

@@ -1,4 +1,5 @@
 # src/glyph/layout.cr
+# # src/glyph/layout.cr
 module Glyph
   module Layout
     def self.resolve(reg : Registration, cell_width : Int32, cell_height : Int32,
@@ -55,7 +56,7 @@ module Glyph
            in .start?    then (h - pb) + y_min * sy
            in .center?   then (pt + eh * 0.5) + ((y_min + y_max) * 0.5) * sy
            in .end?      then pt + y_max * sy
-           in .baseline? then baseline.to_f
+           in .baseline? then pt + baseline.to_f
            end
 
       Transform.new(sx, 0.0, 0.0, -sy, ox, oy)

@@ -1,4 +1,5 @@
 # spec/glyph/layout_spec.cr
+# # spec/glyph/layout_spec.cr
 require "../spec_helper"
 
 describe Glyph::Layout do
@@ -43,6 +44,14 @@ describe Glyph::Layout do
     reg = glossary.register(0x100005, square_glyf, valign: Glyph::VAlign::Baseline)
     t   = Glyph::Layout.resolve(reg, 8, 16, 12)
     t.apply_y(0.0, 0.0).should be_close(12.0, 1e-9)
+  end
+
+  it "honours top padding in baseline alignment" do
+    reg = glossary.register(0x100010, square_glyf, valign: Glyph::VAlign::Baseline, pad: Glyph::Pad.new(top: 0.25))
+    t   = Glyph::Layout.resolve(reg, 8, 16, 12)
+    # h = 16, pt = 16 * 0.25 = 4
+    # oy = pt + baseline = 4 + 12 = 16
+    t.apply_y(0.0, 0.0).should be_close(16.0, 1e-9)
   end
 
   it "shrinks the span with padding" do
