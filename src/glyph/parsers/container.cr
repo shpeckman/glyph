@@ -1,4 +1,5 @@
 # src/glyph/parsers/container.cr
+# # src/glyph/parsers/container.cr
 
 module Glyph
   struct Container
@@ -43,6 +44,8 @@ module Glyph
       gvar     = gvar_len > 0 ? r.slice(gvar_len) : Bytes.empty
 
       Container.new(outlines, colr, cpal, fvar, gvar)
+    rescue IndexError
+      raise Error.new(Reason::MalformedPayload)
     end
   end
 end

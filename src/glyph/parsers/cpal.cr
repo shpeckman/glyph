@@ -1,4 +1,5 @@
 # src/glyph/parsers/cpal.cr
+# # src/glyph/parsers/cpal.cr
 module Glyph
   module Cpal
     def self.parse(bytes : Bytes) : Array(UInt32)
@@ -28,6 +29,8 @@ module Glyph
         i += 1
       end
       colors
+    rescue IndexError
+      raise Error.new(Reason::MalformedPayload)
     end
   end
 end

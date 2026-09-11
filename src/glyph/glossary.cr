@@ -1,4 +1,5 @@
 # src/glyph/glossary.cr
+# # src/glyph/glossary.cr
 
 module Glyph
   class Glossary
@@ -58,7 +59,10 @@ module Glyph
       reg = Registration.new(cp, format, Metrics.new(upm, aw, lh), span, size,
         halign, valign, pad, outlines, colr, palette, next_tag, slot)
 
-      unless existing
+      if existing
+        @order.delete(cp)
+        @order.push(cp)
+      else
         @order.push(cp)
         @size += 1
       end

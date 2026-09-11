@@ -1,4 +1,5 @@
 # spec/spec_helper.cr
+# # spec/spec_helper.cr
 require "spec"
 require "base64"
 require "../src/glyph"
@@ -140,6 +141,48 @@ def simple_gvar_table(dx : Int8, dy : Int8) : Bytes
   # Packed deltas Y (8 points)
   io.write_byte(0x07_u8) # control = 8 items, 8-bit
   8.times { io.write_byte(dy.to_u8) }
+
+  io.to_slice
+end
+
+def shared_points_gvar_table(dx : Int8, dy : Int8) : Bytes
+  io = IO::Memory.new
+  io.write_bytes(0x00010000_u32, BE) # version
+  io.write_bytes(1_u16, BE)          # axis_count
+  io.write_bytes(0_u16, BE)          # shared_tuple_count
+  io.write_bytes(0_u32, BE)          # shared_tuples_offset
+  io.write_bytes(1_u16, BE)          # glyph_count
+  io.write_bytes(0_u16, BE)          # flags (short offsets)
+  io.write_bytes(24_u32, BE)         # data_offset
+
+  # Offsets
+  io.write_bytes(0_u16, BE)  # glyph 0 start
+  io.write_bytes(13_u16, BE) # glyph 0 end (13 * 2 = 26 bytes data)
+
+  # Glyph 0 Data (Start: 0)
+  io.write_bytes(0x8001_u16, BE) # tuple_count_flags (1 tuple + SHARED POINTS)
+  io.write_bytes(10_u16, BE)     # tuple_data_offset (4 base header + 6 tuple header)
+
+  # Tuple header (Start: 4)
+  io.write_bytes(10_u16, BE)     # size of delta data (10 bytes: 5 for X, 5 for Y)
+  io.write_bytes(0x8000_u16, BE) # idx (embedded peak)
+  io.write_bytes(0x4000_u16, BE) # peak (1.0 in f2dot14)
+
+  # Shared points (Start: 10, positioned exactly at tuple_data_offset)
+  io.write_byte(0x04_u8) # count = 4
+  io.write_byte(0x03_u8) # control = 4 items
+  io.write_byte(0x00_u8) # pt 0 = 0
+  io.write_byte(0x01_u8) # pt 1 = +1
+  io.write_byte(0x01_u8) # pt 2 = +1
+  io.write_byte(0x01_u8) # pt 3 = +1
+
+  # Packed deltas X (Start: 16)
+  io.write_byte(0x03_u8) # control = 4 items, 8-bit
+  4.times { io.write_byte(dx.to_u8) }
+
+  # Packed deltas Y (Start: 21)
+  io.write_byte(0x03_u8) # control = 4 items, 8-bit
+  4.times { io.write_byte(dy.to_u8) }
 
   io.to_slice
 end

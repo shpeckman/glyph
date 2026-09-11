@@ -1,4 +1,5 @@
 # src/glyph/parsers/fvar.cr
+# # src/glyph/parsers/fvar.cr
 module Glyph
   module Fvar
     struct Axis
@@ -32,6 +33,8 @@ module Glyph
         axes << Axis.new(tag, min, df, max)
       end
       axes
+    rescue IndexError
+      raise Error.new(Reason::MalformedPayload)
     end
 
     def self.normalize(axes : Array(Axis), coords : Hash(String, Float64)) : Array(Float64)

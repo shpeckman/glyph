@@ -1,4 +1,5 @@
 # src/glyph/parsers/glyf.cr
+# # src/glyph/parsers/glyf.cr
 
 module Glyph
   module Glyf
@@ -99,6 +100,8 @@ module Glyph
       end
 
       Outline.new(points, ends, x_min, y_min, x_max, y_max)
+    rescue IndexError
+      raise Error.new(Reason::MalformedPayload)
     end
 
     private def self.parse_composite(r : Reader, outlines : Array(Outline)?, x_min : Int32, y_min : Int32, x_max : Int32, y_max : Int32) : Outline

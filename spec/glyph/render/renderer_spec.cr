@@ -1,5 +1,13 @@
 # spec/glyph/render/renderer_spec.cr
+# # spec/glyph/render/renderer_spec.cr
 require "../../spec_helper"
+
+# Expose internal cache size exclusively for specs
+class Glyph::Renderer
+  def cache_size
+    @cache.size
+  end
+end
 
 describe Glyph::Renderer do
   it "fills the span with the foreground colour" do
@@ -47,6 +55,45 @@ describe Glyph::Renderer do
     reg      = g.register(0x100000, square_glyf, size: Glyph::SizeMode::Stretch)
     renderer = Glyph::Renderer.new(8, 16, 16)
     renderer.render(reg, 0x112233_u32).pixels.should eq(renderer.render(reg, 0x112233_u32).pixels)
+  end
+
+  it "evicts the oldest renders when the cache exceeds MAX_CACHE" do
+    g        = Glyph::Glossary.new
+    reg      = g.register(0x100000, square_glyf, size: Glyph::SizeMode::Stretch)
+    renderer = Glyph::Renderer.new(8, 16, 16)
+
+    (Glyph::Renderer::MAX_CACHE + 1).times do |i|
+      renderer.render(reg, i.to_u32)
+    end
+
+    renderer.cache_size.should eq(Glyph::Renderer::MAX_CACHE)
+  end
+
+  it "returns a blank image when a corrupted payload raises mid-render" do
+    # Intentionally malformed COLR payload (OOB layer offset)
+    io = IO::Memory.new
+    io.write_bytes(0_u16, BE)    # version
+    io.write_bytes(1_u16, BE)    # num_base
+    io.write_bytes(14_u32, BE)   # base_offset
+    io.write_bytes(9999_u32, BE) # layer_offset OUT OF BOUNDS!
+    io.write_bytes(1_u16, BE)    # num_layers
+
+    # base layer record
+    io.write_bytes(0_u16, BE)
+    io.write_bytes(0_u16, BE)
+    io.write_bytes(1_u16, BE)
+
+    colr = io.to_slice
+    cpal = cpal_table([{255_u8, 0_u8, 0_u8, 255_u8}])
+
+    g   = Glyph::Glossary.new
+    reg = g.register(0x100000, container([square_glyf], colr, cpal), format: Glyph::Format::Colrv0)
+
+    renderer = Glyph::Renderer.new(8, 16, 16)
+    image    = renderer.render(reg, 0xffffff_u32)
+
+    # Rendering should degrade gracefully via rescue block, returning 0/transparent instead of crashing
+    image.pixels.all?(0_u8).should be_true
   end
 
   it "keys the cache on foreground colour and rendering modes" do

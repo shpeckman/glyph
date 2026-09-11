@@ -50,4 +50,19 @@ describe Glyph::Gvar do
     outline.points[0].x.should eq(0)
     outline.points[0].y.should eq(0)
   end
+
+  it "properly advances past shared points before reading tuple deltas" do
+    base = Glyph::Glyf.parse(square_glyf(1000, 1000))
+    gvar = shared_points_gvar_table(10_i8, 20_i8)
+
+    mutated = Glyph::Gvar.apply([base], gvar, [1.0])
+    outline = mutated.first
+
+    # Prior to the fix, the parser read shared points bytes as tuple deltas
+    # (causing completely offset logic) and misaligned the reader.
+    outline.points[0].x.should eq(10)
+    outline.points[0].y.should eq(20)
+    outline.points[2].x.should eq(1010)
+    outline.points[2].y.should eq(1020)
+  end
 end

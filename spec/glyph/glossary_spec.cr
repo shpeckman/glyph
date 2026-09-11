@@ -52,6 +52,23 @@ describe Glyph::Glossary do
     second.tag.should_not eq(first.tag)
   end
 
+  it "bumps a re-registered glyph to the MRU position" do
+    g = Glyph::Glossary.new
+
+    # Fill glossary entirely
+    Glyph::MAX_SLOTS.times { |i| g.register(0x100000 + i, square_glyf) }
+
+    # 0x100000 is now the LRU and slated to be evicted.
+    # Re-registering it should bump it to MRU (safest).
+    g.register(0x100000, square_glyf)
+
+    # Trigger an eviction by registering a new glyph.
+    g.register(0x100000 + Glyph::MAX_SLOTS, square_glyf)
+
+    g[0x100000]?.should_not be_nil # Eviction survivor
+    g[0x100001]?.should be_nil     # Became the new LRU target and fell off
+  end
+
   it "normalizes an invalid span to one cell" do
     g = Glyph::Glossary.new
     g.register(0x100000, square_glyf, span: 5).span.should eq(1)

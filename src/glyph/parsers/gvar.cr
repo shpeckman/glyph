@@ -1,4 +1,5 @@
 # src/glyph/parsers/gvar.cr
+# # src/glyph/parsers/gvar.cr
 module Glyph
   module Gvar
     private struct TupleHeader
@@ -61,7 +62,9 @@ module Glyph
             peak = [] of Float64
             axis_count.times { peak << r.f2dot14 }
           else
-            peak = shared_tuples[idx & 0x0FFF]
+            idx_masked = idx & 0x0FFF
+            raise Error.new(Reason::MalformedPayload) if idx_masked >= shared_tuples.size
+            peak = shared_tuples.unsafe_fetch(idx_masked)
           end
 
           inter_start = nil
@@ -79,6 +82,8 @@ module Glyph
 
         scalars = headers.map { |h| calculate_scalar(coords, h.peak, h.inter_start, h.inter_end) }
 
+        r.seek(tuple_data_offset)
+
         shared_points = nil
         if (tuple_count_flags & 0x8000) != 0
           shared_points = read_packed_points(r)
@@ -87,8 +92,6 @@ module Glyph
         num_points = outline.point_count + 4
         total_dx   = Array(Float64).new(num_points, 0.0)
         total_dy   = Array(Float64).new(num_points, 0.0)
-
-        r.seek(tuple_data_offset)
 
         headers.each_with_index do |h, i|
           scalar   = scalars[i]
@@ -151,6 +154,8 @@ module Glyph
       end
 
       mutated
+    rescue IndexError
+      raise Error.new(Reason::MalformedPayload)
     end
 
     private def self.calculate_scalar(coords : Array(Float64), peak : Array(Float64), start_coords : Array(Float64)?, end_coords : Array(Float64)?) : Float64
